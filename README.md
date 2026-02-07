@@ -244,5 +244,3 @@ python3 -c "from loopnet_mcp.server import mcp; print('OK:', mcp.name)"
 - **No real-time updates**: Cache TTL is 5 minutes. Listings may appear stale within that window.
 
 ## License
-
-Private project — not licensed for redistribution.
