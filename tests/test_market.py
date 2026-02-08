@@ -62,6 +62,7 @@ def _make_prop(
     size_sqft: str | None = "10,000 SF",
     property_type: str | None = "Office",
     listing_type: str | None = "For Sale",
+    cap_rate: str | None = None,
 ) -> PropertySummary:
     return PropertySummary(
         name=name,
@@ -73,6 +74,7 @@ def _make_prop(
         listing_type=listing_type,
         price=price,
         size_sqft=size_sqft,
+        cap_rate=cap_rate,
         url="https://www.loopnet.com/Listing/test/1/",
     )
 
@@ -153,6 +155,22 @@ class TestBuildMarketOverview:
         assert overview.total_listings == 2
         assert overview.avg_price is None
         assert overview.price_range is None
+
+    def test_avg_cap_rate_computed(self):
+        props = [
+            _make_prop(cap_rate="6.0%"),
+            _make_prop(cap_rate="8.0%"),
+        ]
+        overview = build_market_overview("Dallas, TX", None, props)
+        assert overview.avg_cap_rate == "7.00%"
+
+    def test_avg_cap_rate_none_when_missing(self):
+        props = [
+            _make_prop(cap_rate=None),
+            _make_prop(cap_rate=None),
+        ]
+        overview = build_market_overview("Dallas, TX", None, props)
+        assert overview.avg_cap_rate is None
 
     def test_location_passthrough(self):
         overview = build_market_overview("Miami, FL", "retail", [])

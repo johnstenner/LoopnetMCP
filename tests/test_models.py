@@ -37,6 +37,8 @@ def test_property_summary_minimal():
     assert p.name == "Test Property"
     assert p.price is None
     assert p.broker_name is None
+    assert p.units is None
+    assert p.cap_rate is None
 
 
 def test_property_summary_full():
@@ -80,6 +82,7 @@ def test_search_result_empty():
     assert r.properties == []
     assert r.total_results is None
     assert r.page == 1
+    assert r.has_next_page is False
 
 
 def test_search_result_with_properties():

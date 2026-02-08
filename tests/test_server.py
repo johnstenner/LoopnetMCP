@@ -39,7 +39,7 @@ async def test_search_properties_mocked(mcp_client):
             )
     data = json.loads(result.content[0].text)
     assert data["query_location"] == "Dallas, TX"
-    assert len(data["properties"]) == 3
+    assert len(data["properties"]) == 4
     assert data["properties"][0]["name"] == "Downtown Office Tower"
 
 
@@ -65,10 +65,12 @@ async def test_search_properties_with_filters(mcp_client):
     data = json.loads(result.content[0].text)
     assert data["query_location"] == "Dallas, TX"
     assert data["query_property_type"] == "office"
-    assert len(data["properties"]) == 3
-    # Verify the URL passed to fetch contains the right slug
+    assert len(data["properties"]) == 4
+    # Verify the URL passed to fetch contains the right slug and price filters
     url_arg = mock_fetch.call_args[0][0]
     assert "/office/" in url_arg
+    assert "min-price=100000" in url_arg
+    assert "max-price=5000000" in url_arg
 
 
 @pytest.mark.asyncio
@@ -125,3 +127,37 @@ async def test_get_market_overview_mocked(mcp_client):
     assert data["total_listings"] > 0
     assert isinstance(data["sample_listings"], list)
     assert len(data["sample_listings"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_search_properties_with_page(mcp_client):
+    fixture_html = load_fixture("search_results.html")
+    with patch(
+        "loopnet_mcp.scraper.client.LoopnetClient.fetch",
+        new_callable=AsyncMock,
+        return_value=fixture_html,
+    ) as mock_fetch:
+        async with mcp_client:
+            result = await mcp_client.call_tool(
+                "search_properties", {"location": "Dallas, TX", "page": 2}
+            )
+    data = json.loads(result.content[0].text)
+    assert data["page"] == 2
+    url_arg = mock_fetch.call_args[0][0]
+    assert "/2/" in url_arg
+
+
+@pytest.mark.asyncio
+async def test_search_properties_has_next_page(mcp_client):
+    fixture_html = load_fixture("search_results.html")
+    with patch(
+        "loopnet_mcp.scraper.client.LoopnetClient.fetch",
+        new_callable=AsyncMock,
+        return_value=fixture_html,
+    ):
+        async with mcp_client:
+            result = await mcp_client.call_tool(
+                "search_properties", {"location": "Dallas, TX"}
+            )
+    data = json.loads(result.content[0].text)
+    assert data["has_next_page"] is True

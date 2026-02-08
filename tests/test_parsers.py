@@ -24,7 +24,7 @@ def detail_html():
 class TestSearchParser:
     def test_parse_search_results_count(self, search_html):
         results = parse_search_results(search_html)
-        assert len(results) == 3
+        assert len(results) == 4
 
     def test_parse_search_first_listing(self, search_html):
         results = parse_search_results(search_html)
@@ -65,6 +65,28 @@ class TestSearchParser:
     def test_parse_search_empty_html(self):
         results = parse_search_results("")
         assert results == []
+
+    def test_parse_search_units_extracted(self, search_html):
+        results = parse_search_results(search_html)
+        fourth = results[3]
+        assert fourth.name == "Sunset Apartments"
+        assert fourth.units == 22
+
+    def test_parse_search_property_type_cleaned(self, search_html):
+        results = parse_search_results(search_html)
+        fourth = results[3]
+        assert fourth.property_type == "Apartment Building"
+
+    def test_parse_search_cap_rate_extracted(self, search_html):
+        results = parse_search_results(search_html)
+        fourth = results[3]
+        assert fourth.cap_rate == "6.59%"
+
+    def test_parse_search_no_units_on_office(self, search_html):
+        results = parse_search_results(search_html)
+        first = results[0]
+        assert first.units is None
+        assert first.cap_rate is None
 
     def test_parse_pagination_has_next(self, search_html):
         assert parse_pagination(search_html) is True

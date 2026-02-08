@@ -5,6 +5,7 @@ from loopnet_mcp.scraper.urls import (
     build_search_url,
     extract_listing_id,
     build_detail_url,
+    resolve_property_type,
     BASE_URL,
 )
 
@@ -68,6 +69,14 @@ class TestBuildSearchUrl:
         url = build_search_url("LA, CA", property_type="multifamily")
         assert "/apartment-buildings/" in url
 
+    def test_apartment_alias(self):
+        url = build_search_url("LA, CA", property_type="apartment")
+        assert "/apartment-buildings/" in url
+
+    def test_duplex_alias(self):
+        url = build_search_url("LA, CA", property_type="duplex")
+        assert "/apartment-buildings/" in url
+
     def test_unknown_property_type_falls_back(self):
         url = build_search_url("Houston, TX", property_type="unknown")
         assert "/commercial-real-estate/" in url
@@ -75,6 +84,46 @@ class TestBuildSearchUrl:
     def test_none_property_type(self):
         url = build_search_url("Houston, TX", property_type=None)
         assert "/commercial-real-estate/" in url
+
+    def test_with_price_min(self):
+        url = build_search_url("Houston, TX", price_min=500000)
+        assert "min-price=500000" in url
+
+    def test_with_price_max(self):
+        url = build_search_url("Houston, TX", price_max=3000000)
+        assert "max-price=3000000" in url
+
+    def test_with_price_range(self):
+        url = build_search_url("Houston, TX", price_min=500000, price_max=3000000)
+        assert "min-price=500000" in url
+        assert "max-price=3000000" in url
+
+    def test_with_price_type_unit(self):
+        url = build_search_url("Houston, TX", price_max=200000, price_type="unit")
+        assert "max-price=200000" in url
+        assert "price-type=unit" in url
+
+    def test_with_price_type_sf(self):
+        url = build_search_url("Houston, TX", price_max=50, price_type="sf")
+        assert "price-type=sf" in url
+
+    def test_with_price_type_acre(self):
+        url = build_search_url("Houston, TX", price_max=100000, price_type="acre")
+        assert "price-type=acre" in url
+
+    def test_invalid_price_type_ignored(self):
+        url = build_search_url("Houston, TX", price_max=100, price_type="invalid")
+        assert "price-type" not in url
+        assert "max-price=100" in url
+
+    def test_with_size_filters(self):
+        url = build_search_url("Houston, TX", size_min=1000, size_max=50000)
+        assert "min-size=1000" in url
+        assert "max-size=50000" in url
+
+    def test_no_filters_no_query_string(self):
+        url = build_search_url("Houston, TX")
+        assert "?" not in url
 
 
 class TestExtractListingId:
@@ -104,3 +153,49 @@ class TestBuildDetailUrl:
 
     def test_build_detail_url_compound(self):
         assert build_detail_url("48479-210176") == "https://www.loopnet.com/Listing/48479-210176/"
+
+
+class TestResolvePropertyType:
+    def test_canonical_passthrough(self):
+        assert resolve_property_type("multifamily") == "multifamily"
+
+    def test_canonical_office(self):
+        assert resolve_property_type("office") == "office"
+
+    def test_alias_apartment(self):
+        assert resolve_property_type("apartment") == "multifamily"
+
+    def test_alias_apartments(self):
+        assert resolve_property_type("apartments") == "multifamily"
+
+    def test_alias_apartment_building(self):
+        assert resolve_property_type("apartment building") == "multifamily"
+
+    def test_alias_apartment_buildings(self):
+        assert resolve_property_type("apartment buildings") == "multifamily"
+
+    def test_alias_duplex(self):
+        assert resolve_property_type("duplex") == "multifamily"
+
+    def test_alias_triplex(self):
+        assert resolve_property_type("triplex") == "multifamily"
+
+    def test_alias_quadplex(self):
+        assert resolve_property_type("quadplex") == "multifamily"
+
+    def test_alias_multi_family_hyphen(self):
+        assert resolve_property_type("multi-family") == "multifamily"
+
+    def test_alias_multi_family_space(self):
+        assert resolve_property_type("multi family") == "multifamily"
+
+    def test_case_insensitive(self):
+        assert resolve_property_type("Apartment") == "multifamily"
+        assert resolve_property_type("MULTIFAMILY") == "multifamily"
+        assert resolve_property_type("Office") == "office"
+
+    def test_unknown_returns_none(self):
+        assert resolve_property_type("unknown") is None
+
+    def test_none_returns_none(self):
+        assert resolve_property_type(None) is None

@@ -100,6 +100,14 @@ def build_market_overview(
         if total_size > 0:
             avg_price_per_sqft = f"${total_price / total_size:,.0f}/SF"
 
+    cap_rates = [
+        cr for prop in properties
+        if prop.cap_rate and (cr := parse_cap_rate(prop.cap_rate)) is not None
+    ]
+    avg_cap_rate_str: Optional[str] = None
+    if cap_rates:
+        avg_cap_rate_str = f"{sum(cap_rates) / len(cap_rates):.2f}%"
+
     # Breakdowns
     listing_types_breakdown: dict[str, int] = {}
     for prop in properties:
@@ -119,7 +127,7 @@ def build_market_overview(
         total_listings=total_listings,
         avg_price=avg_price,
         avg_price_per_sqft=avg_price_per_sqft,
-        avg_cap_rate=None,
+        avg_cap_rate=avg_cap_rate_str,
         avg_size_sqft=avg_size_sqft,
         price_range=price_range,
         size_range=size_range,

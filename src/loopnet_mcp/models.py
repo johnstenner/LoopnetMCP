@@ -36,6 +36,8 @@ class PropertySummary(BaseModel):
     price_per_sqft: Optional[str] = None
     size_sqft: Optional[str] = None
     lot_size: Optional[str] = None
+    units: Optional[int] = None
+    cap_rate: Optional[str] = None
     url: str
     image_url: Optional[str] = None
     broker_name: Optional[str] = None
@@ -83,6 +85,7 @@ class SearchResult(BaseModel):
     query_listing_type: Optional[str] = None
     total_results: Optional[int] = None
     page: int = 1
+    has_next_page: bool = False
     properties: list[PropertySummary] = Field(default_factory=list)
 
 

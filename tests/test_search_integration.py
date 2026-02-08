@@ -39,13 +39,13 @@ async def test_search_properties_returns_listings(mcp_client):
                 "search_properties", {"location": "Dallas, TX"}
             )
     data = json.loads(result.content[0].text)
-    assert len(data["properties"]) == 3
+    assert len(data["properties"]) == 4
     prop = data["properties"][0]
     assert prop["name"] == "Downtown Office Tower"
     assert prop["city"] == "Dallas"
     assert prop["state"] == "TX"
     assert prop["url"].startswith("https://www.loopnet.com")
-    assert data["total_results"] == 3
+    assert data["total_results"] == 4
 
 
 @pytest.mark.asyncio

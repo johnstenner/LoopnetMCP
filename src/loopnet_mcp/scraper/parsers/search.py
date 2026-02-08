@@ -47,8 +47,16 @@ def parse_search_results(
                     data_points["Cap Rate"] = value
                 elif re.search(r"\d+\s*SF", value, re.IGNORECASE):
                     data_points["Building Size"] = value
-                elif re.search(r"\b(office|retail|industrial|apartment|land|hotel)\b", value, re.IGNORECASE):
-                    data_points["Property Type"] = value
+                else:
+                    # Check for unit count: "22 Unit Apartment Building"
+                    unit_match = re.match(r"(\d+)\s+Units?\s+(.*)", value, re.IGNORECASE)
+                    if unit_match:
+                        data_points["Units"] = unit_match.group(1)
+                        remaining = unit_match.group(2).strip()
+                        if remaining:
+                            data_points["Property Type"] = remaining
+                    elif re.search(r"\b(office|retail|industrial|apartment|land|hotel)\b", value, re.IGNORECASE):
+                        data_points["Property Type"] = value
 
         price = data_points.get("Price")
         if price and price.lower() in ("upon request", "negotiable", "call for pricing"):
@@ -56,6 +64,17 @@ def parse_search_results(
 
         size = data_points.get("Building Size")
         prop_type = data_points.get("Property Type")
+
+        # Extract cap rate percentage (e.g. "6.33%" from "6.33% Cap Rate")
+        cap_rate_raw = data_points.get("Cap Rate")
+        cap_rate_str = None
+        if cap_rate_raw:
+            cr_match = re.search(r"([\d.]+%)", cap_rate_raw)
+            cap_rate_str = cr_match.group(1) if cr_match else cap_rate_raw
+
+        # Extract unit count
+        units_raw = data_points.get("Units")
+        units_val = int(units_raw) if units_raw and units_raw.isdigit() else None
 
         # Image — from carousel slide
         img_tag = placard.select_one("img.image-hide") or placard.select_one(".slide img")
@@ -75,6 +94,8 @@ def parse_search_results(
                 property_type=prop_type,
                 price=price,
                 size_sqft=size,
+                units=units_val,
+                cap_rate=cap_rate_str,
                 url=url,
                 image_url=image_url,
                 broker_name=None,

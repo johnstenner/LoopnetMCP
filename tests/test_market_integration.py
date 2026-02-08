@@ -39,7 +39,7 @@ async def test_market_overview_returns_stats(mcp_client):
                 "get_market_overview", {"location": "Dallas, TX"}
             )
     data = json.loads(result.content[0].text)
-    assert data["total_listings"] == 3
+    assert data["total_listings"] == 4
     assert data["avg_price"] is not None
     assert data["property_subtypes_breakdown"] != {}
 
@@ -62,7 +62,7 @@ async def test_market_overview_with_property_type(mcp_client):
     assert mock_fetch.called
     url_arg = mock_fetch.call_args[0][0]
     assert "/office/" in url_arg
-    assert data["total_listings"] == 3
+    assert data["total_listings"] == 4
 
 
 @pytest.mark.asyncio
@@ -117,7 +117,7 @@ async def test_market_overview_sample_listings_populated(mcp_client):
             )
     data = json.loads(result.content[0].text)
     samples = data["sample_listings"]
-    assert len(samples) == 3
+    assert len(samples) == 4
     for listing in samples:
         assert "name" in listing
         assert "address" in listing
